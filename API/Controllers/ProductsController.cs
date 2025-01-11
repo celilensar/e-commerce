@@ -1,6 +1,9 @@
 using System;
+using System.Formats.Asn1;
+using API.Data;
 using API.Entity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 
 namespace API.Controllers;
 
@@ -8,29 +11,35 @@ namespace API.Controllers;
 [Route("/api/products")]
 public class ProductsController : ControllerBase
 {
-    [HttpGet]
+    private readonly DataContext _context;
 
-    public IActionResult GetProducts()
+    public ProductsController(DataContext context)
     {
+        _context = context;
+    }
 
-        return Ok(new List<Product>(){
-                new Product() { Id =1, Name="Iphone 15", Description="Telefon açıklaması", ImageUrl="1.jpg", IsActive= true, Price=18000, Stock= 100},
-                new Product() { Id =2, Name="Iphone 16", Description="Telefon açıklaması", ImageUrl="1.jpg", IsActive= true, Price=18000, Stock= 100},
-                new Product() { Id =3, Name="Iphone 17", Description="Telefon açıklaması", ImageUrl="1.jpg", IsActive= true, Price=18000, Stock= 100},
-
-        });
+    [HttpGet]
+    public async Task<IActionResult> GetProducts()
+    {
+        var products = await _context.Products!.ToListAsync();
+        return Ok(products);
 
     }
 
     [HttpGet("{id}")]
 
-    public IActionResult GetProduct(int id)
+    public async Task<IActionResult> GetProduct(int? id)
     {
-        return Ok(
-            new Product() { Id = 1, Name = "Iphone 15", Description = "Telefon açıklaması", ImageUrl = "1.jpg", IsActive = true, Price = 18000, Stock = 100 }
+        if (id == 0 || id == null)
+        {
+            return NotFound();
+        }
+        var product = await _context.Products!.FindAsync(id);
 
-
-
-        );
+        if (product == null)
+        {
+            return NotFound();
+        }
+        return Ok(product);
     }
 }
