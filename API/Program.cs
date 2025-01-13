@@ -1,9 +1,9 @@
 using API.Data;
+using API.Middlewares;
 using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
-builder.Services.AddCors();
 // Add services to the container.
 builder.Services.AddDbContext<DataContext>(options =>
 {
@@ -11,32 +11,37 @@ builder.Services.AddDbContext<DataContext>(options =>
     var connectionString = config.GetConnectionString("defaultConnection");
 
     options.UseSqlite(connectionString);
-
 });
+
+builder.Services.AddCors();
+
 builder.Services.AddControllers();
-// Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
+
 builder.Services.AddOpenApi();
 
 var app = builder.Build();
 
-// Configure the HTTP request pipeline.
+app.UseMiddleware<ExceptionHandling>();
+
+
 if (app.Environment.IsDevelopment())
 {
     app.MapOpenApi();
     app.UseSwaggerUI(options =>
     {
-        options.SwaggerEndpoint("/openapi/v1.json", "DEMO");
+        options.SwaggerEndpoint("/openapi/v1.json", "Demo API");
     });
 }
 
 app.UseHttpsRedirection();
+
+app.UseStaticFiles();
 
 app.UseCors(opt =>
 {
     opt.AllowAnyHeader().AllowAnyMethod().WithOrigins("http://localhost:3000");
 });
 
-app.UseStaticFiles();
 app.UseAuthorization();
 
 app.MapControllers();
